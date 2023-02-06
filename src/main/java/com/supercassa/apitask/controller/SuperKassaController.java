@@ -24,12 +24,15 @@ public class SuperKassaController {
 
     @Autowired
     private SuperCassaService superCassaService;
+    private final Object lock = new Object();
 
     @PostMapping("/modify")
     public ResponseEntity<Response> modify(@RequestBody String json) {
         log.info(String.format("Json object: %s", json));
 
         Request request = validateJsonAndMap(json);
+
+
 
         SuperKassa superKassa;
         try {
@@ -38,8 +41,9 @@ public class SuperKassaController {
             throw new ApiRequestException(e.getMessage());
         }
 
-        superKassa.getResponse().setCurrent(superKassa.getResponse().getCurrent() + request.add());
-
+        synchronized (lock) {
+            superKassa.getResponse().setCurrent(superKassa.getResponse().getCurrent() + request.add());
+        }
 
         superCassaService.save(superKassa);
         log.info(String.format("Super Kassa response: %s", superKassa.getResponse()));
